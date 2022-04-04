@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "832159404215",
+    "project_id": "csc-306-343013",
+    "storage_bucket": "csc-306-343013.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:832159404215:android:afa90da84dd86e3754bd32",
+        "android_client_info": {
+          "package_name": "com.xrhythmic.localhistoryapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "832159404215-6sfmpra0c428o21v78fqqq030nv0q20n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeU2PhEzfcrRVnteziouOwxmONZt4j1Ds"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "832159404215-6sfmpra0c428o21v78fqqq030nv0q20n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
