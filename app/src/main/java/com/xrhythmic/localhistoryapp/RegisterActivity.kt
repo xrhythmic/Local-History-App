@@ -79,7 +79,7 @@ class RegisterActivity : AppCompatActivity() {
 
                                 /**
                                  * Here the user is registered and automatically signed in so I have
-                                 * to sign them out and send them to the login screen
+                                 * to send them to the main screen
                                  */
 
                                 val intent =
