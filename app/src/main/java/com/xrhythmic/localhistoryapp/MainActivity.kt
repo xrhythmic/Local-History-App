@@ -2,26 +2,43 @@ package com.xrhythmic.localhistoryapp
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
 import android.os.Bundle
+import android.widget.Toast
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.xrhythmic.localhistoryapp.databinding.ActivityMainBinding
 
-private lateinit var binding: ActivityMainBinding
-
 class MainActivity : AppCompatActivity() {
+    lateinit var mainBinding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        val navView: BottomNavigationView = findViewById(R.id.nav_view)
 
-        val userId = intent.getStringExtra("user_id")
-        val emailId = intent.getStringExtra("email_id")
+        val navController = findNavController(R.id.nav_host_fragment)
 
-        binding.tvUserId.text = "User ID :: $userId"
-        binding.tvEmailId.text = "Email :: $emailId"
+        val appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications
+            )
+        )
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        navView.setupWithNavController(navController)
 
-        binding.btnLogout.setOnClickListener {
-            // Logging out from app
+        mainBinding.addFile.setOnClickListener {
+            Toast.makeText(this, "Clicked Add File", Toast.LENGTH_SHORT).show()
+        }
+
+        mainBinding.setting.setOnClickListener {
+            Toast.makeText(this, "Clicked Settings", Toast.LENGTH_SHORT).show()
+        }
+
+        mainBinding.logOut.setOnClickListener {
             FirebaseAuth.getInstance().signOut()
 
             startActivity(Intent(this@MainActivity, LoginActivity::class.java))

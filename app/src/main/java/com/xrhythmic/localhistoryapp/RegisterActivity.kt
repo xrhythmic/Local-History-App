@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.xrhythmic.localhistoryapp.databinding.ActivityRegisterBinding
 
+
 private lateinit var binding: ActivityRegisterBinding
 
 class RegisterActivity : AppCompatActivity() {
@@ -19,8 +20,6 @@ class RegisterActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-
     }
 
     fun register(view: View) {
