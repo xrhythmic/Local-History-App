@@ -57,16 +57,20 @@ class LoginActivity : AppCompatActivity() {
                                     Toast.LENGTH_SHORT
                                 ).show()
 
+                                FirebaseUtils().fireStoreDatabase.collection("users").document(email)
+                                    .get()
+
+
+
+
                                 /**
                                  * Here the user is logged in so I have to send them to the main screen
                                  */
-
                                 val intent =
                                     Intent(this@LoginActivity, MainActivity::class.java)
 
                                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                intent.putExtra("user_id", firebaseUser.uid)
-                                intent.putExtra("email_id", email)
+                                intent.putExtra("email", email)
                                 startActivity(intent)
                                 finish()
                             } else {

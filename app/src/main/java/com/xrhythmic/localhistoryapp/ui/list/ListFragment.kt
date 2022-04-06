@@ -1,4 +1,4 @@
-package com.xrhythmic.localhistoryapp.ui.dashboard
+package com.xrhythmic.localhistoryapp.ui.list
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,9 +10,9 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import  com.xrhythmic.localhistoryapp.R
 
-class DashboardFragment : Fragment() {
+class ListFragment : Fragment() {
 
-    private lateinit var dashboardViewModel: DashboardViewModel
+    private lateinit var dashboardViewModel: ListViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -20,9 +20,9 @@ class DashboardFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         dashboardViewModel =
-            ViewModelProvider(this).get(DashboardViewModel::class.java)
-        val root = inflater.inflate(R.layout.fragment_dashboard, container, false)
-        val textView: TextView = root.findViewById(R.id.text_dashboard)
+            ViewModelProvider(this).get(ListViewModel::class.java)
+        val root = inflater.inflate(R.layout.fragment_list, container, false)
+        val textView: TextView = root.findViewById(R.id.text_list)
         dashboardViewModel.text.observe(viewLifecycleOwner, Observer {
             textView.text = it
         })

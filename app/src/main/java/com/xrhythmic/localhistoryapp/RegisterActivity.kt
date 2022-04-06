@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import com.google.android.gms.tasks.OnCompleteListener
@@ -81,12 +82,27 @@ class RegisterActivity : AppCompatActivity() {
                                  * to send them to the main screen
                                  */
 
+                                val userData = hashMapOf<String, Any>(
+                                    "email" to email,
+                                    "role" to "user",
+                                    "uid" to firebaseUser.uid,
+                                    "visited_pois" to ArrayList<Any>()
+                                )
+
+                                FirebaseUtils().fireStoreDatabase.collection("users").document(email)
+                                    .set(userData)
+                                    .addOnSuccessListener {
+                                        Log.d("Data Added Successfully", "Added document")
+                                    }
+                                    .addOnFailureListener { exception ->
+                                        Log.w("Data Failed to be added", "Error adding document $exception")
+                                    }
+
                                 val intent =
                                     Intent(this@RegisterActivity, MainActivity::class.java)
 
                                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                intent.putExtra("user_id", firebaseUser.uid)
-                                intent.putExtra("email_id", email)
+                                intent.putExtra("email", email)
                                 startActivity(intent)
                                 finish()
                             } else {

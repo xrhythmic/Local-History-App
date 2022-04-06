@@ -1,6 +1,17 @@
 <resources>
     <string name="app_name">Local History App</string>
-    <string name="title_home">Map View</string>
-    <string name="title_dashboard">List View</string>
+    <string name="title_map_view">Map View</string>
+    <string name="title_list_view">List View</string>
     <string name="title_notifications">Notifications</string>
+    <string name="register_screen_title">REGISTER SCREEN</string>
+    <string name="email_hint">Email:</string>
+    <string name="password_hint">Password:</string>
+    <string name="password_confirmation_hint">Password Confirmation:</string>
+    <string name="has_an_account">Already have an account?</string>
+    <string name="login">Login</string>
+    <string name="image">image</string>
+    <string name="login_screen_title">LOGIN SCREEN</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="register">Register</string>
+    <string name="google_maps_api_key">AIzaSyAwQJSRlA7_7ApDxUxSrRnzalts4CqRns4</string>
 </resources>
