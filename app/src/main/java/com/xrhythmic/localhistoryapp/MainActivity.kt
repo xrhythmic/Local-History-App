@@ -20,24 +20,28 @@ import androidx.databinding.DataBindingUtil
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.tasks.CancellationToken
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.xrhythmic.localhistoryapp.databinding.ActivityMainBinding
 import java.util.*
-import kotlin.properties.Delegates
 
 
 class MainActivity : AppCompatActivity() {
     private var fusedLocationClient: FusedLocationProviderClient? = null
-    private var lastLocation: Location? = null
+    private var currentAddress: Address? = null
 
-    private var latitude by Delegates.notNull<Double>()
-    private var longitude by Delegates.notNull<Double>()
+    private var cancellationTokenSource: CancellationTokenSource? = null
+    private var cancellationToken: CancellationToken? = null
+    private var localPois: ArrayList<Any>? = ArrayList<Any>()
+
     private lateinit var mainBinding: ActivityMainBinding
-    private lateinit var database: FirebaseFirestore
-    private lateinit var user: MutableMap<String, Any>
+    lateinit var database: FirebaseFirestore
+    lateinit var user: MutableMap<String, Any>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,8 +53,6 @@ class MainActivity : AppCompatActivity() {
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
         val navController = findNavController(R.id.nav_host_fragment)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-
 
         getUser(email)
 
@@ -92,37 +94,83 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun getPois() {
+        getPoisBySubAdmin()
+    }
+
+    private fun getPoisBySubAdmin() {
+        val poisQuery = database.collection("pois").whereEqualTo("sub_admin",
+            currentAddress?.subAdminArea
+        )
+        // Get the documents
+        poisQuery.get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    localPois?.add(document.data  as MutableMap<String, Any>)
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w(TAG, "Error getting documents: ", exception)
+            }
+            .addOnCompleteListener {
+                if (localPois.isNullOrEmpty()) {
+                    getPoisByAdmin()
+                }
+            }
+    }
+
+    private fun getPoisByAdmin() {
+        val poisQuery = database.collection("pois").whereEqualTo("admin",
+            currentAddress?.adminArea
+        )
+
+        // Get the documents
+        poisQuery.get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    localPois?.add(document.data  as MutableMap<String, Any>)
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w(TAG, "Error getting documents: ", exception)
+            }
+            .addOnCompleteListener {
+                if (localPois.isNullOrEmpty()) {
+                    showMessage("No Local POIs found in your area")
+                }
+            }
+    }
+
     public override fun onStart() {
         super.onStart()
         if (!checkPermissions()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions()
-            }
+            requestPermissions()
         }
         else {
-            getLastLocation()
+            getCurrentLocation()
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun getLastLocation() {
-        fusedLocationClient?.lastLocation!!.addOnCompleteListener(this) { task ->
-            if (task.isSuccessful && task.result != null) {
-                Log.d(TAG, "getLastLocation Succeeded ${task.result}", )
-                lastLocation = task.result
+    private fun getCurrentLocation() {
+        cancellationTokenSource = CancellationTokenSource()
+        cancellationToken = cancellationTokenSource!!.token
 
-                val geocoder = Geocoder(this, Locale.getDefault())
-                Log.d("Location", (lastLocation)?.latitude.toString())
-                Log.d("Location", (lastLocation)?.longitude.toString())
-                val addresses: List<Address> = geocoder.getFromLocation((lastLocation)!!.latitude, (lastLocation)!!.longitude, 1)
-                val currentCityName: String = addresses[0].getAddressLine(0)
-                Log.d("Location", currentCityName)
+        fusedLocationClient?.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, cancellationToken!!)
+            ?.addOnCompleteListener(this) { task ->
+                if (task.isSuccessful && task.result != null) {
+                    Log.d(TAG, "getLastLocation Succeeded ${task.result}")
+
+                    val geocoder = Geocoder(this, Locale.getDefault())
+                    val addresses: List<Address> = geocoder.getFromLocation((task.result)!!.latitude, (task.result)!!.longitude, 1)
+                    currentAddress = addresses[0]
+                    getPois()
+                }
+                else {
+                    Log.w(TAG, "getLastLocation:exception", task.exception)
+                    showMessage("No location detected. Make sure location is enabled on the device.")
+                }
             }
-            else {
-                Log.w(TAG, "getLastLocation:exception", task.exception)
-                showMessage("No location detected. Make sure location is enabled on the device.")
-            }
-        }
     }
     private fun showMessage(string: String) {
         val container = findViewById<View>(R.id.layout)
@@ -138,27 +186,48 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkPermissions(): Boolean {
-        val permissionState = ActivityCompat.checkSelfPermission(
+        val coarsePermissionState = ActivityCompat.checkSelfPermission(
             this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
         )
-        return permissionState == PackageManager.PERMISSION_GRANTED
+
+        val finePermissionState = ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        )
+
+        val backgroundPermissionState = ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+        )
+
+        val allPermissionsEqual = (backgroundPermissionState == finePermissionState && coarsePermissionState == backgroundPermissionState )
+
+        return (coarsePermissionState == PackageManager.PERMISSION_GRANTED) && allPermissionsEqual
     }
 
     private fun startLocationPermissionRequest() {
         ActivityCompat.requestPermissions(
             this@MainActivity,
-            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION),
             REQUEST_PERMISSIONS_REQUEST_CODE
         )
     }
 
     private fun requestPermissions() {
-        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+        val shouldCoarseProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
             this,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
-        if (shouldProvideRationale) {
+        val shouldFineProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        val shouldBackgroundProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+            this,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        )
+        if (shouldCoarseProvideRationale || shouldFineProvideRationale || shouldBackgroundProvideRationale) {
             Log.i(TAG, "Displaying permission rationale to provide additional context.")
             showSnackbar("Location permission is needed for core functionality", "Okay",
                 View.OnClickListener {
@@ -186,7 +255,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 grantResults[0] == PackageManager.PERMISSION_GRANTED -> {
                     // Permission granted.
-                    getLastLocation()
+                    getCurrentLocation()
                 }
                 else -> {
                     showSnackbar("Permission was denied", "Settings",
