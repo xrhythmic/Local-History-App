@@ -61,28 +61,6 @@
                 app:layout_anchor="@id/bottom_app_bar" />
 
             <com.nambimobile.widgets.efab.FabOption
-                android:id="@+id/setting"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:fab_icon="@drawable/ic_baseline_settings_24"
-                app:label_text="Settings" />
-
-            <com.nambimobile.widgets.efab.FabOption
-                android:id="@+id/add_poi"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                app:fab_icon="@drawable/ic_baseline_add_location_alt_24"
-                app:label_text="Add POI" />
-
-            <com.nambimobile.widgets.efab.FabOption
-                android:id="@+id/camera"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:fab_icon="@drawable/ic_baseline_camera_alt_24"
-                app:label_text="Take a photo!" />
-
-            <com.nambimobile.widgets.efab.FabOption
                 android:id="@+id/log_out"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

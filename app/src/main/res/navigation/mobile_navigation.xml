@@ -12,12 +12,6 @@
         tools:layout="@layout/fragment_map" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.xrhythmic.localhistoryapp.ui.list.ListFragment"
-        android:label="@string/title_list_view"
-        tools:layout="@layout/fragment_list" />
-
-    <fragment
         android:id="@+id/navigation_notifications"
         android:name="com.xrhythmic.localhistoryapp.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"

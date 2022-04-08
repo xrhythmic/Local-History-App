@@ -52,21 +52,7 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment)
 
         navView.setupWithNavController(navController)
-
-        mainBinding.addPoi.visibility = View.INVISIBLE
-
-        mainBinding.addPoi.setOnClickListener {
-            if (user["role"]?.equals("admin") == true) {
-                Toast.makeText(this, "Clicked Add POI", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "You are not an Admin", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        mainBinding.setting.setOnClickListener {
-            Toast.makeText(this, "Clicked Settings", Toast.LENGTH_SHORT).show()
-        }
-
+        
         mainBinding.logOut.setOnClickListener {
             FirebaseAuth.getInstance().signOut()
 

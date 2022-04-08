@@ -98,6 +98,7 @@ class MapFragment : Fragment() {
                     val pos = marker.position
                     val intent = Intent(activity, ShowPoiActivity::class.java)
                     intent.putExtra("id", "(${pos.latitude})-(${pos.longitude})")
+                    intent.putExtra("userRole", "${user["role"]}")
                     startActivity(intent)
                 }
                 true
@@ -111,6 +112,7 @@ class MapFragment : Fragment() {
             currentAddress?.subAdminArea
         )
         // Get the documents
+        localPois = ArrayList<MutableMap<String, Any>>()
         poisQuery.get()
             .addOnSuccessListener { documents ->
                 for (document in documents) {
@@ -148,7 +150,8 @@ class MapFragment : Fragment() {
             }
             .addOnCompleteListener {
             if (localPois.isNullOrEmpty()) {
-                showMessage("No POIs found")
+                showMessage("No POIs found in your area")
+                updateMap()
             } else {
                 updateMap()
             }
@@ -160,6 +163,15 @@ class MapFragment : Fragment() {
             childFragmentManager.findFragmentById(R.id.frg) as SupportMapFragment?
         Log.d("LOCATION", "Updating LOCATION")
         mapFragment!!.getMapAsync { mMap ->
+            mMap.clear()
+            val loc = currentAddress?.let { LatLng(it.latitude, it.longitude) }
+            val marker = loc?.let {
+                MarkerOptions()
+                    .position(it)
+                    .title("You're Here!")
+            }
+            mMap.addMarker(marker).showInfoWindow()
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15f));
             for (poi in localPois!!) {
                 Log.d("LOCATION", poi.toString())
                 val location = poi["location"] as HashMap<*, *>
@@ -205,7 +217,6 @@ class MapFragment : Fragment() {
                     val geocoder = Geocoder(requireActivity(), Locale.getDefault())
                     val addresses: List<Address> = geocoder.getFromLocation((task.result)!!.latitude, (task.result)!!.longitude, 1)
                     currentAddress = addresses[0]
-                    moveMap()
                     getPois()
                 }
                 else {
@@ -214,22 +225,7 @@ class MapFragment : Fragment() {
                 }
             }
     }
-    private fun moveMap() {
-        val mapFragment =
-            childFragmentManager.findFragmentById(R.id.frg) as SupportMapFragment?
 
-        mapFragment!!.getMapAsync { mMap ->
-            val loc = currentAddress?.let { LatLng(it.latitude, it.longitude) }
-            val marker = loc?.let {
-                MarkerOptions()
-                    .position(it)
-                    .title("You're Here!")
-            }
-
-            mMap.addMarker(marker)
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 15f));
-        }
-    }
     private fun showMessage(string: String) {
         Toast.makeText(requireActivity(), string, Toast.LENGTH_LONG).show()
     }
@@ -251,12 +247,7 @@ class MapFragment : Fragment() {
             Manifest.permission.ACCESS_FINE_LOCATION,
         )
 
-        val backgroundPermissionState = ActivityCompat.checkSelfPermission(
-            requireActivity(),
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-        )
-
-        val allPermissionsEqual = (backgroundPermissionState == finePermissionState && coarsePermissionState == backgroundPermissionState )
+        val allPermissionsEqual = ( finePermissionState == coarsePermissionState )
 
         return (coarsePermissionState == PackageManager.PERMISSION_GRANTED) && allPermissionsEqual
     }
@@ -264,7 +255,7 @@ class MapFragment : Fragment() {
     private fun startLocationPermissionRequest() {
         ActivityCompat.requestPermissions(
             requireActivity(),
-            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION),
+            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION),
             REQUEST_PERMISSIONS_REQUEST_CODE
         )
     }
@@ -278,11 +269,7 @@ class MapFragment : Fragment() {
             requireActivity(),
             Manifest.permission.ACCESS_FINE_LOCATION
         )
-        val shouldBackgroundProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-            requireActivity(),
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION
-        )
-        if (shouldCoarseProvideRationale || shouldFineProvideRationale || shouldBackgroundProvideRationale) {
+        if (shouldCoarseProvideRationale || shouldFineProvideRationale ) {
             Log.i(TAG, "Displaying permission rationale to provide additional context.")
             showSnackbar("Location permission is needed for core functionality", "Okay",
                 View.OnClickListener {

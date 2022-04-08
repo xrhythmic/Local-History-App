@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">Local History App</string>
     <string name="title_map_view">Map View</string>
-    <string name="title_list_view">List View</string>
     <string name="title_notifications">Notifications</string>
     <string name="register_screen_title">REGISTER SCREEN</string>
     <string name="email_hint">Email:</string>
@@ -22,4 +21,8 @@
     <string name="name_hint">Name</string>
     <string name="add_poi">Add POI</string>
     <string name="speak_this_poi">Speak this POI</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="upload_image">Upload Image</string>
+    <string name="image_hint">Image Url</string>
 </resources>

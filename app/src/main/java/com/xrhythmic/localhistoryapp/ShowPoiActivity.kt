@@ -1,5 +1,6 @@
 package com.xrhythmic.localhistoryapp
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -15,14 +16,19 @@ class ShowPoiActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityShowPoiBinding
     var poi: MutableMap<String, Any> = mutableMapOf<String, Any>()
+    lateinit var userRole: String
     lateinit var mTTS: TextToSpeech
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityShowPoiBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        getPoi(intent.getStringExtra("id").toString())
+        userRole = intent.getStringExtra("userRole").toString()
 
+        if (userRole == "admin") {
+           binding.btnAdminDelete.visibility = View.VISIBLE
+           binding.btnAdminEdit.visibility = View.VISIBLE
+        }
 
 
         mTTS = TextToSpeech(this, TextToSpeech.OnInitListener { status ->
@@ -44,17 +50,25 @@ class ShowPoiActivity : AppCompatActivity() {
 
     }
 
+    override fun onStart() {
+        super.onStart()
+        getPoi(intent.getStringExtra("id").toString())
+    }
+
     private fun getPoi(id: String) {
         val docRef = FirebaseUtils().fireStoreDatabase.collection("pois").document(id)
 
         // Get the document
         docRef.get().addOnCompleteListener { task ->
             if (task.isSuccessful) {
+                Log.d("POI ERROR", task.result.data.toString())
                 poi = task.result.data as MutableMap<String, Any>
                 binding.tvTitle.text = poi["name"].toString()
                 binding.tvDescription.text = poi["description"].toString()
-                val firstImage = (poi["images"] as ArrayList<*>)[0].toString()
-                Picasso.get().load(firstImage).into(binding.ivPoi)
+                val firstImage = poi["image"].toString()
+                if (firstImage.isNotBlank()) {
+                    Picasso.get().load(firstImage).into(binding.ivPoi)
+                }
             } else {
                 Log.d("ERROR", "Document get failed: ", task.exception)
             }
@@ -65,4 +79,25 @@ class ShowPoiActivity : AppCompatActivity() {
         val poiTextToSpeak = "Point of interest name: ${binding.tvTitle.text}. Description: ${binding.tvDescription.text}"
         mTTS.speak(poiTextToSpeak, TextToSpeech.QUEUE_FLUSH, null, null)
     }
+
+    fun deletePoi(view: View) {
+        val docRef = FirebaseUtils().fireStoreDatabase.collection("pois").document(intent.getStringExtra("id").toString())
+
+        docRef.delete()
+            .addOnSuccessListener {
+                Log.d("DocDelete", "DocumentSnapshot successfully deleted!")
+                finish()
+            }
+            .addOnFailureListener { e ->
+                Log.w("DocDelete", "Error deleting document", e)
+            }
+    }
+
+    fun editPoi(view: View) {
+        val id = intent.getStringExtra("id").toString()
+        val intent = Intent(this, AddPoiActivity::class.java)
+        intent.putExtra("id", id)
+        startActivity(intent)
+    }
+
 }

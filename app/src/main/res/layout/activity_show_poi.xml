@@ -49,6 +49,7 @@
         android:id="@+id/iv_poi"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="35dp"
         android:contentDescription="@string/image"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -86,6 +87,42 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_description" />
+
+    <LinearLayout
+        android:id="@+id/ll_longitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_speak_poi">
+
+        <Button
+            android:id="@+id/btn_admin_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_marginHorizontal="10dp"
+            android:text="@string/edit"
+            android:onClick="editPoi"
+            android:visibility="gone"
+            style="?android:attr/buttonBarButtonStyle" />
+
+        <Button
+            android:id="@+id/btn_admin_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_marginHorizontal="10dp"
+            android:text="@string/delete"
+            android:onClick="deletePoi"
+            android:visibility="gone"
+            style="?android:attr/buttonBarButtonStyle" />
+    </LinearLayout>
 
 
 
