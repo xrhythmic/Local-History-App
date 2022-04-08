@@ -46,10 +46,10 @@ class MainActivity : AppCompatActivity() {
         database = FirebaseFirestore.getInstance()
 
         val email = intent.getStringExtra("email").toString()
+        getUser(email)
+
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
         val navController = findNavController(R.id.nav_host_fragment)
-
-        getUser(email)
 
         navView.setupWithNavController(navController)
 
@@ -82,8 +82,8 @@ class MainActivity : AppCompatActivity() {
         docRef.get().addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 user = task.result.data as MutableMap<String, Any>
-                viewModel.setCurrentUser(user)
-                Log.d("COMPLETE", "Document get succeeded: $user")
+
+                Log.d("COMPLETE", "Document get succeeded: ${viewModel.user.value}")
             } else {
                 Log.d("ERROR", "Document get failed: ", task.exception)
             }

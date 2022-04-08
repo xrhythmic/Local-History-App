@@ -49,20 +49,11 @@ class LoginActivity : AppCompatActivity() {
                     .addOnCompleteListener(
                         OnCompleteListener<AuthResult> { task ->
                             if (task.isSuccessful) {
-                                val firebaseUser: FirebaseUser = task.result!!.user!!
-
                                 Toast.makeText(
                                     this@LoginActivity,
                                     "You have successfully Logged In!",
                                     Toast.LENGTH_SHORT
                                 ).show()
-
-                                FirebaseUtils().fireStoreDatabase.collection("users").document(email)
-                                    .get()
-
-
-
-
                                 /**
                                  * Here the user is logged in so I have to send them to the main screen
                                  */

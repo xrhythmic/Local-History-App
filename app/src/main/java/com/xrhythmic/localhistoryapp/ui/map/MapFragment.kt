@@ -5,8 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.*
 import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
@@ -22,8 +21,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
@@ -35,9 +32,10 @@ import com.google.android.gms.maps.model.*
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.firebase.firestore.FirebaseFirestore
-import com.xrhythmic.localhistoryapp.FirebaseUtils
+import com.xrhythmic.localhistoryapp.AddPoiActivity
 import com.xrhythmic.localhistoryapp.MainActivity
 import com.xrhythmic.localhistoryapp.R
+import com.xrhythmic.localhistoryapp.ShowPoiActivity
 import java.util.*
 
 
@@ -47,6 +45,7 @@ class MapFragment : Fragment() {
 
     private var fusedLocationClient: FusedLocationProviderClient? = null
     private var currentAddress: Address? = null
+    var user: MutableMap<String, Any> = mutableMapOf<String, Any>()
 
     private var cancellationTokenSource: CancellationTokenSource? = null
     private var cancellationToken: CancellationToken? = null
@@ -63,6 +62,7 @@ class MapFragment : Fragment() {
         val root = inflater.inflate(R.layout.fragment_map, container, false)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         val parent = (activity as MainActivity?)
+        getUser(parent?.intent?.getStringExtra("email").toString())
 
         val mapFragment =
             childFragmentManager.findFragmentById(R.id.frg) as SupportMapFragment?  //use SupportMapFragment for using in fragment instead of activity  MapFragment = activity   SupportMapFragment = fragment
@@ -85,51 +85,31 @@ class MapFragment : Fragment() {
 
 
             mMap.setOnMapClickListener(OnMapClickListener { point ->
-                val marker = MarkerOptions()
-                    .position(LatLng(point.latitude, point.longitude))
-                    .title("New Marker")
-
-                val geocoder = Geocoder(parent, Locale.getDefault())
-                val address: Address =
-                    geocoder.getFromLocation((point.latitude), (point.longitude), 1)[0]
-
-
-                val poiData = hashMapOf<String, Any>(
-                    "admin" to address.adminArea,
-                    "sub-admin" to address.subAdminArea,
-                    "description" to "Example Description",
-                    "images" to  ArrayList<Any>().add("https://miro.medium.com/max/640/0*DSmHXQ2-F3FMpevO.jpg"),
-                    "location" to LatLng(point.latitude, point.longitude),
-                    "name" to marker.title
-                )
-
-                FirebaseUtils().fireStoreDatabase.collection("pois").document("(${point.latitude})-(${point.longitude})")
-                    .set(poiData)
-                    .addOnSuccessListener {
-                        Log.d("Data Added Successfully", "Added document")
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.w("Data Failed to be added", "Error adding document $exception")
-                    }
-
-                mMap.addMarker(marker)
-                Log.d("MARKER ADDED", point.latitude.toString() + "---" + point.longitude)
+                if (user["role"]?.equals("admin") == true) {
+                    val intent = Intent(activity, AddPoiActivity::class.java)
+                    intent.putExtra("latitude", point.latitude)
+                    intent.putExtra("longitude", point.longitude)
+                    startActivity(intent)
+                }
             })
+
+            mMap.setOnMarkerClickListener { marker ->
+                if (marker.title != "You're Here!") {
+                    val pos = marker.position
+                    val intent = Intent(activity, ShowPoiActivity::class.java)
+                    intent.putExtra("id", "(${pos.latitude})-(${pos.longitude})")
+                    startActivity(intent)
+                }
+                true
+            }
         }
-
-        viewModel.address.observe(viewLifecycleOwner, Observer<Address> {
-            Log.d("ADDRESS UPDATES", "ADDRESS UPDATED")
-
-        })
-
-        getPois()
-
         return root
     }
 
     private fun getPois() {
-        Log.d("Location", viewModel.address.value.toString())
-        val poisQuery = database.collection("pois")
+        val poisQuery = database.collection("pois").whereEqualTo("sub-admin",
+            currentAddress?.subAdminArea
+        )
         // Get the documents
         poisQuery.get()
             .addOnSuccessListener { documents ->
@@ -151,7 +131,7 @@ class MapFragment : Fragment() {
 
     private fun getPoisByAdmin() {
         val poisQuery = database.collection("pois").whereEqualTo("admin",
-            viewModel.address.value?.adminArea
+            currentAddress?.adminArea
         )
 
         Log.d("LOCATION", "Get POIs")
@@ -161,10 +141,18 @@ class MapFragment : Fragment() {
                 for (document in documents) {
                     localPois?.add(document.data  as MutableMap<String, Any>)
                 }
+
             }
             .addOnFailureListener { exception ->
                 Log.w("LOCATION", "Error getting documents: ", exception)
             }
+            .addOnCompleteListener {
+            if (localPois.isNullOrEmpty()) {
+                showMessage("No POIs found")
+            } else {
+                updateMap()
+            }
+        }
     }
 
     private fun updateMap() {
@@ -218,6 +206,7 @@ class MapFragment : Fragment() {
                     val addresses: List<Address> = geocoder.getFromLocation((task.result)!!.latitude, (task.result)!!.longitude, 1)
                     currentAddress = addresses[0]
                     moveMap()
+                    getPois()
                 }
                 else {
                     Log.w(TAG, "getLastLocation:exception", task.exception)
@@ -339,6 +328,22 @@ class MapFragment : Fragment() {
                         }
                     )
                 }
+            }
+        }
+    }
+
+    private fun getUser(email: String) {
+        val docRef = database.collection("users").document(email)
+
+        // Get the document
+        docRef.get().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                user = task.result.data as MutableMap<String, Any>
+                viewModel.setCurrentUser(user)
+
+                Log.d("COMPLETE", "Document get succeeded: ${viewModel.user.value}")
+            } else {
+                Log.d("ERROR", "Document get failed: ", task.exception)
             }
         }
     }

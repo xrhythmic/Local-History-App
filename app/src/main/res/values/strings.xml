@@ -14,4 +14,12 @@
     <string name="no_account">Don\'t have an account?</string>
     <string name="register">Register</string>
     <string name="google_maps_api_key">AIzaSyAwQJSRlA7_7ApDxUxSrRnzalts4CqRns4</string>
+    <string name="add_a_new_poi">Add a new POI</string>
+    <string name="longitude">Longitude:</string>
+    <string name="latitude">Latitude:</string>
+    <string name="value">value</string>
+    <string name="description_hint">Description</string>
+    <string name="name_hint">Name</string>
+    <string name="add_poi">Add POI</string>
+    <string name="speak_this_poi">Speak this POI</string>
 </resources>
