@@ -30,6 +30,16 @@ class ShowPoiActivity : AppCompatActivity() {
                 //if no error then set lang
                 mTTS.language = Locale.UK
             }
+
+            binding.btnSpeakPoi.setOnClickListener {
+                if(mTTS.isSpeaking) {
+                    mTTS.stop()
+                    speakPoi()
+                } else {
+                    speakPoi()
+                }
+            }
+
         })
 
     }
@@ -43,7 +53,7 @@ class ShowPoiActivity : AppCompatActivity() {
                 poi = task.result.data as MutableMap<String, Any>
                 binding.tvTitle.text = poi["name"].toString()
                 binding.tvDescription.text = poi["description"].toString()
-                val firstImage = (poi["images"] as Array<*>)[0].toString()
+                val firstImage = (poi["images"] as ArrayList<*>)[0].toString()
                 Picasso.get().load(firstImage).into(binding.ivPoi)
             } else {
                 Log.d("ERROR", "Document get failed: ", task.exception)
@@ -51,7 +61,7 @@ class ShowPoiActivity : AppCompatActivity() {
         }
     }
 
-    fun speakPoi(view: View) {
+    fun speakPoi() {
         val poiTextToSpeak = "Point of interest name: ${binding.tvTitle.text}. Description: ${binding.tvDescription.text}"
         mTTS.speak(poiTextToSpeak, TextToSpeech.QUEUE_FLUSH, null, null)
     }
